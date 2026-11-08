@@ -150,6 +150,8 @@ CREATE TABLE
         DOB DATE,
         PHONE VARCHAR2 (30),
         ORACLE_USERNAME VARCHAR2 (128) NOT NULL,
+        IS_VIP NUMBER DEFAULT 0 NOT NULL,
+        CONSTRAINT CHK_PATIENT_IS_VIP CHECK (IS_VIP IN (0, 1)),
         PRIMARY KEY (PATIENT_ID),
         CONSTRAINT UQ_PATIENT_USERNAME UNIQUE (ORACLE_USERNAME)
     );
@@ -196,16 +198,18 @@ CREATE TABLE
         NAME VARCHAR2 (100) NOT NULL,
         ROLE VARCHAR2 (50) NOT NULL,
         ORACLE_USERNAME VARCHAR2 (128) NOT NULL,
+        IS_SUPERVISOR VARCHAR2 (1),
+        CONSTRAINT CHK_STAFF_SUPERVISOR CHECK (IS_SUPERVISOR IN ('Y', 'N')),
         PRIMARY KEY (STAFF_ID),
         CONSTRAINT UQ_STAFF_USERNAME UNIQUE (ORACLE_USERNAME),
         CONSTRAINT CHK_STAFF_ROLE CHECK (
             ROLE IN (
-                'ROLE_DOCTOR',
-                'ROLE_NURSE',
-                'ROLE_LAB_TECH',
-                'ROLE_RECEPTIONIST',
-                'ROLE_BILLING',
-                'ROLE_PHARMACIST'
+                'ROLE_DOCTOR_P2',
+                'ROLE_NURSE_P2',
+                'ROLE_LAB_TECH_P2',
+                'ROLE_RECEPTIONIST_P2',
+                'ROLE_BILLING_P2',
+                'ROLE_PHARMACIST_P2'
             )
         )
     );
