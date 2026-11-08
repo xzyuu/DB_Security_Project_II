@@ -13,78 +13,38 @@ CREATE OR REPLACE PROCEDURE PROJ_TWO.INSERT_LAB_RESULT (
 AUTHID DEFINER
 AS
     v_department_id NUMBER;
-    v_c_label       NUMBER;
-    v_r_label       NUMBER;
-    v_result_id     NUMBER;
+    v_label         NUMBER;
 BEGIN
-    -- Verify technician belongs to the order's department.
     SELECT lo.department_id
     INTO v_department_id
     FROM PROJ_TWO.LAB_ORDER lo
     JOIN PROJ_TWO.STAFF s
         ON s.department_id = lo.department_id
     WHERE lo.order_id = p_order_id
-      AND UPPER(s.oracle_username) =
-          SYS_CONTEXT('USERENV', 'SESSION_USER')
+      AND UPPER(s.oracle_username) = SYS_CONTEXT('USERENV', 'SESSION_USER')
       AND s.role = 'ROLE_LAB_TECH_P2'
       AND lo.department_id IN (23, 24);
 
-    -- Assign department-specific C and R labels.
     IF v_department_id = 23 THEN
-        v_c_label := 3001;
-        v_r_label := 3003;
+        v_label := 3003;
     ELSE
-        v_c_label := 3002;
-        v_r_label := 3004;
+        v_label := 3004;
     END IF;
 
-    SAVEPOINT before_lab_result;
-
-    -- Insert a Pending result at C level.
     INSERT INTO PROJ_TWO.LAB_RESULT (
-        ORDER_ID, RESULT_VALUE, RESULT_DATE,
-        STATUS, RELEASED_FLAG, OLS_LABEL
+        ORDER_ID, RESULT_VALUE, RESULT_DATE, STATUS, RELEASED_FLAG, OLS_LABEL
     )
     VALUES (
-        p_order_id, p_result_value, p_result_date,
-        'Pending', 0, v_c_label
-    )
-    RETURNING RESULT_ID INTO v_result_id;
-
-    -- Upgrade the unreleased result from C to R.
-    UPDATE PROJ_TWO.LAB_RESULT
-    SET OLS_LABEL = v_r_label
-    WHERE RESULT_ID = v_result_id;
-
-    IF SQL%ROWCOUNT <> 1 THEN
-        RAISE_APPLICATION_ERROR(
-            -20002, 'Failed to classify result'
-        );
-    END IF;
+        p_order_id, p_result_value, p_result_date, 'Pending', 0, v_label
+    );
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(
-            -20001, 'Unauthorized laboratory order'
-        );
-
-    WHEN OTHERS THEN
-        ROLLBACK TO before_lab_result;
-        RAISE;
+        RAISE_APPLICATION_ERROR(-20001, 'Unauthorized laboratory order');
 END;
 /
 
-BEGIN
-    SA_USER_ADMIN.SET_PROG_PRIVS(
-        policy_name       => 'HOSPITAL_POL',
-        schema_name       => 'PROJ_TWO',
-        program_unit_name => 'INSERT_LAB_RESULT',
-        privileges        => 'WRITEUP'
-    );
-END;
-/
-
-GRANT EXECUTE ON PROJ_TWO.INSERT_LAB_RESULT TO ROLE_LAB_TECH_P2; 
+GRANT EXECUTE ON PROJ_TWO.INSERT_LAB_RESULT TO ROLE_LAB_TECH_P2;
 
 
 
