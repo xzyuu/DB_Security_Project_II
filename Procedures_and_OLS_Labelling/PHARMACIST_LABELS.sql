@@ -6,7 +6,7 @@ BEGIN
         max_read_label  => 'R:ADMIN,PHARM:PHARMACY',
         max_write_label => 'R:PHARM:PHARMACY',
         min_write_label => 'C',
-        def_label       => 'C:ADMIN,PHARM:PHARMACY',
+        def_label       => 'R:ADMIN,PHARM:PHARMACY',
         row_label       => 'C:PHARM:PHARMACY'
     );
 
